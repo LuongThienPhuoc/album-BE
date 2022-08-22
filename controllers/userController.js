@@ -13,6 +13,20 @@ const { JWTAuthToken } = require('../middleware/JWT')
 
 class userController {
 
+  getToken = async (req, res) => {
+    const { email } = res.locals.data
+    try {
+      res.status(200).send(JSON.stringify({
+        token: JWTAuthToken({ email })
+      }))
+    } catch (err) {
+      res.status(401).send(JSON.stringify({
+        err: err.message
+      }))
+    }
+
+  }
+
   search = async (req, res) => {
     const user = await User.find({
       "email": {
@@ -122,7 +136,7 @@ class userController {
         message: "Refresh thành công",
         status: 1,
         user,
-        token: JWTAuthToken({ email })
+
       }))
     } else {
       res.status(401).send(

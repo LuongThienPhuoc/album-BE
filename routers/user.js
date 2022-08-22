@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 const { AuthMiddleware } = require("../middleware/JWT")
 
+router.get("/get-token", AuthMiddleware, userController.getToken)
 router.get("/search", AuthMiddleware, userController.search)
 router.get("/refresh", AuthMiddleware, userController.refresh)
 router.post("/send-otp", userController.checkMailRegister, userController.sendOtp)

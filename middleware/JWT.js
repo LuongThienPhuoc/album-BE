@@ -6,7 +6,7 @@ function JWTAuthToken(data) {
     return (jwt.sign(
         { ...data },
         key,
-        { expiresIn: '60000000' } // 10'
+        { expiresIn: '600s' } // 10'
     ))
 }
 
@@ -34,7 +34,7 @@ async function AuthMiddleware(req, res, next) {
             jwt.verify(token, key, (err, data) => {
                 if (err) {
                     res.status(401).send(JSON.stringify({
-                        status: 0,
+                        status: 401,
                         err: err.message
                     }))
                 } else {
@@ -43,7 +43,6 @@ async function AuthMiddleware(req, res, next) {
                 }
             })
         }
-
     } catch (err) {
         res.status(401).send(JSON.stringify({
             status: 0,
