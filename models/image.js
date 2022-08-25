@@ -21,6 +21,12 @@ const ImageSchema = new Schema(
         size: Number,
         height: Number,
         width: Number,
+        initImage: {
+            type: String,
+            default: 0,
+            // 0: loading, -1: false, 1:true
+        },
+
     },
     { timestamps: true }
 );

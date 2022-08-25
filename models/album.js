@@ -19,6 +19,10 @@ const AlbumSchema = new Schema(
                 ref: "users",
             }
         ],
+        oldName: {
+            type: String,
+            default: ""
+        }
     },
     { timestamps: true }
 );

@@ -2,10 +2,65 @@ const User = require("../models/users");
 const Album = require("../models/album");
 const Image = require("../models/image")
 const fs = require('fs');
-const { JWTAuthToken } = require('../middleware/JWT');
-const { default: mongoose } = require("mongoose");
+const fsExtra = require("fs-extra")
 
 class albumController {
+    editAlbum = async (req, res) => {
+        try {
+            const { nameAlbum, idAlbum, oldName } = req.body
+            const { email } = res.locals.data
+            const newPath = `./image/users/${email}/${nameAlbum}`
+            if (!fs.existsSync(newPath)) {
+                const images = await Image.find({ album: idAlbum })
+                images.forEach(async (image) => {
+                    const hash = image.imgURL.split("/")
+                    hash[4] = nameAlbum
+                    image.imgURL = hash.join("/")
+                    image.save()
+                })
+                console.log(nameAlbum)
+                console.log(oldName)
+                // Update name album
+                const album = await Album.findOneAndUpdate(
+                    {
+                        _id: idAlbum
+                    },
+                    {
+                        name: nameAlbum,
+                        oldName: oldName,
+                    }
+                ).populate({
+                    path: "images",
+                    select: "size name imgURL email users",
+                    populate: {
+                        path: "users",
+                        select: "email"
+                    }
+                }).populate({
+                    path: "users",
+                    select: "email",
+                })
+
+                album.name = nameAlbum
+                res.status(200).json({
+                    message: "success",
+                    status: 1,
+                    album
+                })
+            } else {
+                res.status(200).json({
+                    message: "Album tồn tại",
+                    status: 0,
+                })
+            }
+
+        } catch (err) {
+            res.status(200).json({
+                err: err.message
+            })
+        }
+    }
+
     getImagesInAlbum = async (req, res) => {
         Album.findOne({ _id: req.query.id })
             .populate({
@@ -19,12 +74,13 @@ class albumController {
                 path: "users",
                 select: "email",
             })
-
             .then(result => {
+
                 res.status(200).json({
                     message: "success",
                     status: 1,
-                    album: result
+                    album: result,
+                    isOwner: result.users[0].email === res.locals.data.email ? true : false
                 })
             })
             .catch(err => {
@@ -56,13 +112,13 @@ class albumController {
                         }).then(resultPopulate => {
                             res.status(201).send(JSON.stringify({
                                 message: "Tạo album mới thành công",
-                                status: 0,
+                                status: 1,
                                 dataUser: resultPopulate
                             }))
                         })
                     })
             } else {
-                res.status(400).send(JSON.stringify({
+                res.status(200).send(JSON.stringify({
                     message: "Album tồn tại",
                     status: 0
                 }))

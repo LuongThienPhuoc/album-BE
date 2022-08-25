@@ -6,7 +6,7 @@ function JWTAuthToken(data) {
     return (jwt.sign(
         { ...data },
         key,
-        { expiresIn: '600s' } // 10'
+        { expiresIn: '6000s' } // 10'
     ))
 }
 
@@ -29,11 +29,11 @@ async function AuthMiddleware(req, res, next) {
     try {
         const token = req.cookies._jwtAlbum
         if (!token) {
-            res.status(401).send(JSON.stringify({ status: 0 }))
+            res.status(200).send(JSON.stringify({ status: 401 }))
         } else {
             jwt.verify(token, key, (err, data) => {
                 if (err) {
-                    res.status(401).send(JSON.stringify({
+                    res.status(200).send(JSON.stringify({
                         status: 401,
                         err: err.message
                     }))

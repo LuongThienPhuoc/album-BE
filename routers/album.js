@@ -5,7 +5,7 @@ const userController = require("../controllers/userController");
 const albumController = require("../controllers/albumController")
 const { AuthMiddleware } = require("../middleware/JWT")
 
-
+router.post("/edit-album", AuthMiddleware, albumController.editAlbum)
 router.post("/unshare-album-with-me", AuthMiddleware, albumController.unshareAlbumWithMe)
 router.post("/delete-album", AuthMiddleware, albumController.deleteAlbum);
 router.post("/add-album", AuthMiddleware, albumController.addAlbum)

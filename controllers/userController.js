@@ -6,12 +6,95 @@ const bcrypt = require("bcrypt");
 const MakeCode = require("../helper/MakeCode.js");
 const SendMail = require('../helper/SendMail');
 const fs = require('fs');
-const path = require('path');
-const Resize = require('../helper/Resize')
 const saltRounds = 10;
 const { JWTAuthToken } = require('../middleware/JWT')
 
 class userController {
+  updateUserName = async (req, res) => {
+    try {
+      const { email } = res.locals.data
+      const { name } = req.body
+      await User.findOneAndUpdate({ email }, { name }).exec()
+      res.status(200).json({
+        message: "Thành công",
+        status: 1
+      })
+    } catch (err) {
+      res.status(400).json({
+        err: err.message
+      })
+    }
+  }
+
+  getAllStatusImage = async (req, res) => {
+    try {
+      const { email } = res.locals.data
+      const user = await User.findOne({ email }).select("email")
+      const { step } = req.query
+      console.log(step)
+      const images = await Image.find({
+        users: { $in: [user._id] }
+      })
+        .skip(Number(step) * 5)
+        .limit(5)
+        .sort({ createdAt: -1 })
+        .populate("album", "name")
+
+      res.status(200).json({
+        images,
+        step
+      })
+    } catch (err) {
+      res.status(400).json({
+        err: err.message
+      })
+    }
+  }
+
+  updateAvatar = async (req, res) => {
+    try {
+      const { avatarURL } = req.body
+      const { email } = res.locals.data
+      console.log(avatarURL)
+      console.log(email)
+      await User.findOneAndUpdate(
+        { email },
+        { avatarURL: avatarURL }
+      )
+      res.status(200).json({
+        message: "Thành công"
+      })
+    } catch (err) {
+      res.status(400).json({
+        err: err.message
+      })
+    }
+  }
+
+  changePassword = async (req, res) => {
+    try {
+      const { oldPass, newPass } = req.body
+      const { email } = res.locals.data
+      console.log(oldPass, newPass)
+      console.log(email)
+      const user = await User.findOne({ email }).exec()
+      if (bcrypt.compareSync(oldPass + user.salt, user.pass)) {
+        user.pass = bcrypt.hashSync(newPass + user.salt, saltRounds)
+        await user.save()
+        res.status(200).json({
+          status: 1,
+          message: "Change password success"
+        })
+      } else {
+        res.status(200).json({
+          status: 0,
+          message: "Mật khẩu củ không đúng"
+        })
+      }
+    } catch (err) {
+      res.status(400).json({ err: err.message })
+    }
+  }
 
   getToken = async (req, res) => {
     const { email } = res.locals.data
@@ -51,7 +134,7 @@ class userController {
     const { email } = res.locals.data
     let imgURL
     if (!req.isImage) {
-      imgURL = `/image/users/${req.hashUrl[3]}/${decodeURI(req.hashUrl[4])}/${req.hashUrl[5]}.png`
+      imgURL = `/image/users/${req.hashUrl[3]}/${decodeURI(req.hashUrl[4])}/${req.hashUrl[5]}.jpeg`
     } else {
       imgURL = `/image/users/${req.hashUrl[3]}/${decodeURI(req.hashUrl[4])}/${req.hashUrl[5]}`
     }
@@ -75,7 +158,7 @@ class userController {
   checkExistFile = async (req, res, next) => {
     const hashUrl = req.url.split("/")
     req.hashUrl = hashUrl
-    if (hashUrl[5].includes(".png")) {
+    if (hashUrl[5].includes(".jpeg")) {
       req.isImage = true
     } else {
       req.isImage = false
@@ -93,7 +176,7 @@ class userController {
     const { email } = res.locals.data
     const hashUrl = req.url.split("/")
     if (fs.existsSync(`./image/users/${hashUrl[3]}/${decodeURI(hashUrl[4])}/${hashUrl[5]}`)) {
-      let imgURL = `/image/users/${hashUrl[3]}/${decodeURI(hashUrl[4])}/${hashUrl[5]}.png`
+      let imgURL = `/image/users/${hashUrl[3]}/${decodeURI(hashUrl[4])}/${hashUrl[5]}.jpeg`
       const image = await Image.findOne({ imgURL: imgURL })
         .populate("users", "email")
       const album = await Album.findOne({ _id: image.album })

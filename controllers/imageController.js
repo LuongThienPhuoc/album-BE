@@ -4,20 +4,78 @@ const Image = require("../models/image")
 const fs = require('fs');
 const path = require('path');
 const Resize = require('../helper/Resize')
+const Resize1 = require('../helper/Resize1')
 const unzipper = require("unzipper")
 const extract = require('extract-zip')
 const sizeOf = require('buffer-image-size');
 const MakeCode = require("../helper/MakeCode");
 global.checkUpload = {}
+const fsExtra = require("fs-extra")
 
 class imageController {
+
+    moveImage = async (req, res) => {
+        try {
+            const { nameAlbum, idImage } = req.body
+            const image = await Image.findOne({ _id: idImage }).exec()
+            const hash = image.imgURL.split("/")
+            const oldPath = `.${image.imgURL}`
+            hash[4] = nameAlbum
+            image.imgURL = hash.join("/")
+            const newPath = `.${hash.join("/")}`
+            if (fs.existsSync(oldPath)) {
+                fsExtra.copySync(oldPath, newPath)
+                fsExtra.copySync(oldPath.slice(0, oldPath.lastIndexOf(".jpeg")), newPath.slice(0, newPath.lastIndexOf(".jpeg")))
+                fs.rmSync(oldPath, { recursive: true });
+                fs.rmdirSync(oldPath.slice(0, oldPath.lastIndexOf(".jpeg")), { recursive: true });
+            }
+            await Album.findOneAndUpdate(
+                { _id: image.album },
+                { $pull: { images: idImage } }
+            )
+            const album = await Album.findOneAndUpdate(
+                {
+                    name: nameAlbum,
+                },
+                {
+                    $push: { images: idImage }
+                }
+            )
+            image.album = album._id
+            await image.save()
+            res.status(200).json({
+                message: "Success",
+                status: 1
+            })
+        } catch (err) {
+            res.status(400).json({
+                err: err.message
+            })
+        }
+    }
+
+    clearTrash = async (req, res) => {
+        try {
+            Image.deleteMany({ initImage: "-1" })
+                .then(result => {
+                    res.status(200).json({
+                        result
+                    })
+                })
+        } catch (err) {
+            res.status(400).json({
+                err: err.message
+            })
+        }
+    }
+
     deleteImage = async (req, res) => {
         try {
             const { email, idImage } = req.query
             const image = await Image.findOne({ _id: idImage }).exec();
             // Xóa foloder ở backedn
             if (fs.existsSync("." + image.imgURL)) await fs.rmSync("." + image.imgURL)
-            if (fs.existsSync("." + image.imgURL.slice(0, image.imgURL.indexOf(".png")))) await fs.rmdirSync("." + image.imgURL.slice(0, image.imgURL.indexOf(".png")), { recursive: true })
+            if (fs.existsSync("." + image.imgURL.slice(0, image.imgURL.indexOf(".jpeg")))) await fs.rmdirSync("." + image.imgURL.slice(0, image.imgURL.indexOf(".jpeg")), { recursive: true })
 
             // Xóa image khỏi album
             await Album.findByIdAndUpdate(
@@ -176,6 +234,68 @@ class imageController {
         next()
     }
 
+    checkUpload1 = async (req, res) => {
+        try {
+            const { listImage } = req.body
+            const images = await Image.find({ _id: { $in: listImage } }).select("initImage size").exec()
+            res.status(200)
+                .send(JSON.stringify({
+                    images,
+                    status: 1
+                }))
+        } catch (err) {
+            res.status(400).send(JSON.stringify({
+                err: err.message
+            }))
+        }
+    }
+
+    saveFile1 = async (req, res, next) => {
+        const { nameImage, email } = req.body
+        const imagePath = path.join(__dirname.slice(0, __dirname.lastIndexOf("\\")), `/image/users/${email}/${req.album.name}`);
+        const fileUpload = new Resize1(imagePath);
+        const listImage = []
+        try {
+            const user = await User.findOne({ email })
+            for (let i = 0; i < req.files.length; i++) {
+                let imgURL = await fileUpload.save(req.files[i].buffer)
+                if (imgURL) {
+                    let dimensions = sizeOf(req.files[i].buffer);
+                    let imageCreate = await Image.create({
+                        name: nameImage,
+                        imgURL: `/image/users/${email}/${req.album.name}/${imgURL}`,
+                        size: req.files[i].size,
+                        users: [user],
+                        album: req.album,
+                        height: dimensions.height,
+                        width: dimensions.width,
+                    })
+                    await imageCreate.save()
+                    listImage.push(imageCreate._id)
+
+                    if (imageCreate) {
+                        req.album.images.push(imageCreate)
+                    }
+                }
+
+                if (req.files.length === i + 1) {
+                    await req.album.save()
+                    res.status(200).send(JSON.stringify({
+                        message: "Success",
+                        listImage,
+                        status: 1
+                    }))
+                }
+            }
+        } catch (err) {
+            res.status(400).json({
+                status: 400,
+                err: err.message
+            })
+        }
+
+    }
+
     checkUpload = async (req, res) => {
         const { key, email } = req.body
         if (global.checkUpload[key][global.checkUpload[key].length - 1] !== 0) {
@@ -205,6 +325,8 @@ class imageController {
             }))
         }
     }
+
+
 
     saveFile = async (req, res, next) => {
         const { nameImage, email } = req.body
@@ -247,6 +369,8 @@ class imageController {
     }
     async unzip(filename, imagePath) {
         const filezip = `${imagePath}\\${filename.split(".")[0] + ".zip"}`
+        console.log(filezip)
+        console.log(imagePath)
         try {
             extract(filezip, { dir: imagePath })
                 .then(result => {
@@ -256,6 +380,7 @@ class imageController {
             console.log(err.message)
         }
     }
+
     async deleteZip(filename, imagePath) {
         const filezip = `${imagePath}\\${filename.split(".")[0] + ".zip"}`
         if (fs.existsSync(filezip)) {
