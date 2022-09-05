@@ -22,7 +22,7 @@ const ImageSchema = new Schema(
         height: Number,
         width: Number,
         initImage: {
-            type: String,
+            type: Number,
             default: 0,
             // 0: loading, -1: false, 1:true
         },

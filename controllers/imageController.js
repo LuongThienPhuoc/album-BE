@@ -298,6 +298,10 @@ class imageController {
 
     checkUpload = async (req, res) => {
         const { key, email } = req.body
+        // res.status(200).send(JSON.stringify({
+        //     checkUpload: global.checkUpload[key]
+        // }))
+        console.log(global.checkUpload)
         if (global.checkUpload[key][global.checkUpload[key].length - 1] !== 0) {
             const user = await User.findOne({ email }).populate({
                 path: "albums albumsShare",
@@ -321,12 +325,11 @@ class imageController {
             delete global.checkUpload[key]
         } else {
             res.status(200).send(JSON.stringify({
-                checkUpload: global.checkUpload[key]
+                checkUpload: global.checkUpload[key],
+                status: 1,
             }))
         }
     }
-
-
 
     saveFile = async (req, res, next) => {
         const { nameImage, email } = req.body

@@ -1,0 +1,18 @@
+You have triggered an unhandledRejection, you may have forgotten to catch a Promise rejection:
+TypeError: Cannot read properties of undefined (reading 'length')
+    at checkUpload (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\controllers\imageController.js:305:61)
+    at Layer.handle [as handle_request] (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\route.js:144:13)
+    at C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\middleware\JWT.js:42:21
+    at C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\jsonwebtoken\verify.js:223:12
+    at getSecret (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\jsonwebtoken\verify.js:90:14)
+    at Object.module.exports [as verify] (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\jsonwebtoken\verify.js:94:10)
+    at AuthMiddleware (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\middleware\JWT.js:34:17)
+    at Layer.handle [as handle_request] (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\route.js:144:13)
+    at Route.dispatch (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\route.js:114:3)
+    at Layer.handle [as handle_request] (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\layer.js:95:5)
+    at C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\index.js:346:12)
+    at next (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (C:\TAPTAP\Tech Fresher\Month 1\TOTP\album-BE\node_modules\express\lib\router\index.js:175:3)

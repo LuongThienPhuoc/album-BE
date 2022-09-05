@@ -1,6 +1,6 @@
 const sharp = require('sharp');
 const path = require('path');
-
+const { v4: uuidv4 } = require('uuid');
 class Resize {
     constructor(folder) {
         this.folder = folder;
@@ -12,13 +12,12 @@ class Resize {
         await sharp(buffer)
             // .png()
             .jpeg()
-            .toFile(filepath).then(() => { console.log('Success') }).catch((err) => { console.log("err", err.message) })
+            .toFile(filepath).then(() => { console.log('Success ' + filename) }).catch((err) => { console.log("err", err.message) })
         return filename
     }
 
     static filename() {
-        // return `${Date.now()}.png`;
-        return `${Date.now()}.jpeg`;
+        return `${uuidv4()}.jpeg`
     }
 
     filezip(filename) {
@@ -29,4 +28,5 @@ class Resize {
         return path.resolve(`${this.folder}/${filename}`)
     }
 }
+
 module.exports = Resize;

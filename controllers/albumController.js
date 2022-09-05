@@ -110,6 +110,7 @@ class albumController {
                                 select: "size email"
                             }
                         }).then(resultPopulate => {
+                            console.log("created album success")
                             res.status(201).send(JSON.stringify({
                                 message: "Tạo album mới thành công",
                                 status: 1,
